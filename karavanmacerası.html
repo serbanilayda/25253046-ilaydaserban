@@ -1,0 +1,560 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Karavan Görevi</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Lilita+One&family=Nunito:wght@700;900&display=swap" rel="stylesheet">
+  <style>
+    * {
+      touch-action: manipulation;
+      user-select: none;
+      -webkit-user-select: none;
+      box-sizing: border-box;
+    }
+    body, html {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background-color: #064e3b;
+      font-family: 'Nunito', sans-serif;
+    }
+    .font-title {
+      font-family: 'Lilita One', 'Fredoka One', cursive, sans-serif;
+      letter-spacing: 0.05em;
+    }
+    .font-retro {
+      font-family: 'Fredoka One', cursive, sans-serif;
+    }
+    .text-stroke-title {
+      -webkit-text-stroke: 4px #261608;
+      text-shadow: 0 8px 0 #1b0e04, 0 12px 18px rgba(0,0,0,0.6);
+    }
+    .text-stroke-sm {
+      -webkit-text-stroke: 2px #1f1307;
+      text-shadow: 0 4px 0 #120902;
+    }
+    .btn-glossy-green {
+      background: linear-gradient(180deg, #4ade80 0%, #22c55e 50%, #15803d 100%);
+      box-shadow: 0 8px 0 #14532d, 0 14px 20px rgba(0,0,0,0.4), inset 0 2px 0 rgba(255,255,255,0.6);
+    }
+    .btn-glossy-green:active {
+      transform: translateY(6px);
+      box-shadow: 0 2px 0 #14532d, 0 6px 10px rgba(0,0,0,0.4), inset 0 2px 0 rgba(255,255,255,0.4);
+    }
+    .btn-glossy-orange {
+      background: linear-gradient(180deg, #fde047 0%, #f97316 60%, #c2410c 100%);
+      box-shadow: 0 8px 0 #7c2d12, 0 14px 20px rgba(0,0,0,0.4), inset 0 2px 0 rgba(255,255,255,0.7);
+    }
+    .btn-glossy-orange:active {
+      transform: translateY(6px);
+      box-shadow: 0 2px 0 #7c2d12, 0 6px 10px rgba(0,0,0,0.4), inset 0 2px 0 rgba(255,255,255,0.4);
+    }
+    .btn-glossy-wood {
+      background: linear-gradient(180deg, #fef08a 0%, #fbbf24 40%, #d97706 100%);
+      box-shadow: 0 6px 0 #92400e, 0 10px 16px rgba(0,0,0,0.35), inset 0 2px 0 rgba(255,255,255,0.6);
+    }
+    .btn-glossy-wood:active {
+      transform: translateY(4px);
+      box-shadow: 0 2px 0 #92400e, 0 4px 8px rgba(0,0,0,0.35);
+    }
+    .touch-btn {
+      touch-action: none;
+      user-select: none;
+      transition: transform 0.06s ease;
+    }
+    .touch-btn:active {
+      transform: scale(0.92);
+      filter: brightness(1.2);
+    }
+    /* Seamless Cover Screen Background using procedural scenic sunset & forest styling */
+    .cover-bg {
+      background: linear-gradient(180deg, #f97316 0%, #fbbf24 35%, #059669 70%, #064e3b 100%);
+      background-size: cover;
+      background-position: center;
+    }
+    /* Screen shake animation on collision */
+    .screen-shake {
+      animation: shake 0.35s cubic-bezier(.36,.07,.19,.97) both;
+    }
+    @keyframes shake {
+      10%, 90% { transform: translate3d(-3px, 0, 0); }
+      20%, 80% { transform: translate3d(5px, 0, 0); }
+      30%, 50%, 70% { transform: translate3d(-6px, 0, 0); }
+      40%, 60% { transform: translate3d(6px, 0, 0); }
+    }
+  </style>
+</head>
+<body class="relative w-screen h-screen flex flex-col items-center justify-center overflow-hidden text-slate-100">
+
+  <!-- Main Game Canvas Container -->
+  <div id="gameWrapper" class="relative w-full h-full flex items-center justify-center bg-slate-900">
+    <canvas id="gameCanvas" class="block w-full h-full"></canvas>
+
+    <!-- IN-GAME HUD -->
+    <div id="hud" class="hidden absolute top-2 left-2 right-2 md:top-4 md:left-6 md:right-6 z-20 flex items-center justify-between pointer-events-none">
+      
+      <!-- Health & Total Score -->
+      <div class="flex items-center gap-2 md:gap-3 pointer-events-auto bg-slate-950/85 backdrop-blur-md px-3 py-1.5 md:px-4 md:py-2 rounded-2xl border-2 border-amber-400/50 shadow-xl">
+        <div class="flex items-center space-x-1" id="healthContainer">
+          <span class="text-xl md:text-2xl">🚐</span>
+          <span class="text-xl md:text-2xl">🚐</span>
+          <span class="text-xl md:text-2xl">🚐</span>
+        </div>
+        <div class="h-6 w-[2px] bg-slate-700"></div>
+        <div>
+          <div class="text-[9px] md:text-[10px] text-amber-300 font-bold uppercase tracking-wider">SKOR</div>
+          <div id="scoreDisplay" class="font-title text-base md:text-2xl text-yellow-300 drop-shadow">0</div>
+        </div>
+      </div>
+
+      <!-- Center: Stage Status & Camp Progress Bar -->
+      <div class="flex flex-col items-center pointer-events-auto bg-slate-950/85 backdrop-blur-md px-3 py-1.5 md:px-6 md:py-2 rounded-2xl border-2 border-emerald-400/50 shadow-xl min-w-[130px] md:min-w-[240px]">
+        <div class="flex items-center gap-2 mb-1">
+          <span id="phaseBadge" class="px-2 py-0.5 rounded-full text-[10px] md:text-xs font-black uppercase tracking-wider bg-amber-400 text-slate-950 font-title">1. AŞAMA: YOLCULUK</span>
+          <span id="timerDisplay" class="font-title text-sm md:text-xl text-emerald-300">01:00</span>
+        </div>
+        <div class="w-full bg-slate-800 rounded-full h-2.5 overflow-hidden border border-slate-700">
+          <div id="progressBar" class="bg-gradient-to-r from-amber-400 via-emerald-400 to-cyan-400 h-full w-0 transition-all duration-200 rounded-full"></div>
+        </div>
+      </div>
+
+      <!-- Right: Supplies & Audio Toggle -->
+      <div class="flex items-center gap-2 pointer-events-auto">
+        <div class="flex items-center gap-2 bg-slate-950/85 backdrop-blur-md px-3 py-1.5 md:px-4 md:py-2 rounded-2xl border-2 border-amber-400/50 shadow-xl">
+          <div class="text-xl md:text-2xl">🔥</div>
+          <div>
+            <div class="text-[9px] md:text-[10px] text-amber-300 font-bold uppercase">MALZEME</div>
+            <div id="itemsDisplay" class="font-title text-sm md:text-xl text-white">0 / 6</div>
+          </div>
+        </div>
+        <button id="soundToggleBtn" class="bg-slate-950/85 backdrop-blur-md p-2 md:p-3 rounded-2xl border-2 border-amber-400/50 text-lg md:text-xl shadow-xl hover:bg-slate-800 active:scale-95 transition-all">
+          🔊
+        </button>
+      </div>
+    </div>
+
+    <!-- On-screen Notification Banner -->
+    <div id="notificationBanner" class="absolute top-20 z-20 left-1/2 -translate-x-1/2 px-5 py-2.5 rounded-full font-title text-sm md:text-lg text-yellow-200 bg-slate-950/90 border-2 border-yellow-400 shadow-2xl opacity-0 transition-all duration-300 pointer-events-none flex items-center gap-2 scale-90">
+      <span class="text-xl">🏕️</span>
+      <span id="notifText">Kampa yaklaştın! Park çizgisine gir!</span>
+    </div>
+
+    <!-- Mobile Touch Controls Overlay -->
+    <div id="touchControls" class="hidden absolute bottom-4 left-4 right-4 z-20 flex justify-between items-end pointer-events-none md:hidden">
+      <!-- Steering Left / Right -->
+      <div class="flex gap-3 pointer-events-auto">
+        <button id="btnLeft" class="touch-btn w-16 h-16 rounded-2xl bg-cyan-600/90 active:bg-cyan-500 border-3 border-cyan-200 shadow-2xl flex items-center justify-center text-3xl text-white font-title">
+          ◀
+        </button>
+        <button id="btnRight" class="touch-btn w-16 h-16 rounded-2xl bg-cyan-600/90 active:bg-cyan-500 border-3 border-cyan-200 shadow-2xl flex items-center justify-center text-3xl text-white font-title">
+          ▶
+        </button>
+      </div>
+
+      <!-- Acceleration & Brake -->
+      <div class="flex flex-col gap-2 pointer-events-auto">
+        <button id="btnGas" class="touch-btn w-24 h-16 rounded-2xl bg-emerald-600/90 active:bg-emerald-500 border-3 border-emerald-200 shadow-2xl flex items-center justify-center font-title text-lg text-white">
+          GAZ ⚡
+        </button>
+        <button id="btnBrake" class="touch-btn w-24 h-14 rounded-2xl bg-rose-600/90 active:bg-rose-500 border-3 border-rose-200 shadow-2xl flex items-center justify-center font-title text-sm text-white">
+          FREN 🛑
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- COVER / MAIN MENU SCREEN (Seamless, single scenic screen) -->
+  <div id="coverScreen" class="absolute inset-0 z-40 flex flex-col items-center justify-between p-4 md:p-8 cover-bg overflow-y-auto">
+    <!-- Atmospheric Sunrise / Pine Forest Silhouette SVG Canvas Background -->
+    <canvas id="menuScenicCanvas" class="absolute inset-0 w-full h-full pointer-events-none opacity-90"></canvas>
+
+    <!-- Top Floating Header Badge -->
+    <div class="relative z-10 text-center mt-3 md:mt-6 animate-bounce">
+      <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-slate-950/70 border border-yellow-400/50 backdrop-blur-md text-amber-300 font-title text-xs md:text-sm tracking-wider uppercase shadow-xl">
+        <span>✨</span> 70'ler Retro Casual Park Macerası <span>✨</span>
+      </div>
+    </div>
+
+    <!-- Central Title Banner with 3D Pop Typography -->
+    <div class="relative z-10 text-center my-auto flex flex-col items-center max-w-lg w-full">
+      <!-- Title: KARAVAN GÖREVİ -->
+      <div class="relative mb-2">
+        <h1 class="font-title text-5xl md:text-7xl lg:text-8xl tracking-wider text-yellow-300 text-stroke-title transform -rotate-2 select-none">
+          KARAVAN
+        </h1>
+        <h2 class="font-title text-4xl md:text-6xl lg:text-7xl tracking-wider text-amber-400 text-stroke-title transform rotate-1 -mt-2 md:-mt-4 select-none">
+          GÖREVİ
+        </h2>
+      </div>
+
+      <p class="text-amber-100 font-bold text-sm md:text-base drop-shadow-md max-w-sm mb-6 bg-slate-950/40 px-4 py-1.5 rounded-xl backdrop-blur-sm border border-white/20">
+        Orman yolundan kamp malzemelerini topla, virajları dön ve diğer karavanların arasına <span class="text-yellow-300 underline">kusursuz park et</span>!
+      </p>
+
+      <!-- Player Name Input Field -->
+      <div class="w-full max-w-xs mb-5">
+        <label for="playerNameInput" class="block text-xs uppercase font-title tracking-wider text-yellow-200 mb-1 drop-shadow">SÜRÜCÜ ADIN</label>
+        <input id="playerNameInput" type="text" maxlength="12" value="ScoobSürücü" 
+               class="w-full text-center font-title text-lg md:text-xl py-2 px-4 rounded-2xl bg-slate-900/90 border-3 border-amber-400 text-amber-200 focus:outline-none focus:ring-4 focus:ring-amber-300 shadow-2xl">
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="w-full max-w-xs flex flex-col gap-3">
+        <button id="btnPlayGame" class="btn-glossy-green w-full py-4 rounded-3xl font-title text-2xl md:text-3xl text-white tracking-wider flex items-center justify-center gap-3 transition-all">
+          <span>▶</span> OYNA
+        </button>
+
+        <div class="flex gap-2 w-full">
+          <button id="btnHowToPlay" class="btn-glossy-wood flex-1 py-2.5 rounded-2xl font-title text-sm md:text-base text-slate-950 flex items-center justify-center gap-1.5 transition-all">
+            <span>❓</span> NASIL OYNANIR
+          </button>
+          <button id="btnLeaderboardMenu" class="btn-glossy-wood flex-1 py-2.5 rounded-2xl font-title text-sm md:text-base text-slate-950 flex items-center justify-center gap-1.5 transition-all">
+            <span>🏆</span> SKORLAR
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Bottom Controls & Hints Info -->
+    <div class="relative z-10 text-center mb-2">
+      <div class="inline-block bg-slate-950/60 backdrop-blur-md px-4 py-1.5 rounded-full border border-emerald-400/30 text-xs text-emerald-200 font-bold">
+        🎮 <strong>Masaüstü:</strong> W,A,S,D / Oklar | 📱 <strong>Mobil:</strong> Dokunmatik Ekran Butonları
+      </div>
+    </div>
+  </div>
+
+  <!-- HOW TO PLAY MODAL -->
+  <div id="howToModal" class="hidden absolute inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-md p-4">
+    <div class="w-full max-w-md bg-gradient-to-b from-slate-900 to-emerald-950 p-6 rounded-3xl border-4 border-amber-400 shadow-2xl relative text-center">
+      <h3 class="font-title text-3xl text-amber-300 text-stroke-sm mb-3">NASIL OYNANIR?</h3>
+      
+      <div class="space-y-3 text-left text-xs md:text-sm text-emerald-100 mb-6 bg-slate-950/60 p-4 rounded-2xl border border-emerald-600/40 font-semibold">
+        <div class="flex items-start gap-3">
+          <span class="text-2xl">1️⃣</span>
+          <p><strong>Yolculuk Aşaması:</strong> Orman yolunda ilerle. <span class="text-yellow-300">Marshmallow, Kamp Odunu ve Yakıt</span> toplayarak her birinden <strong class="text-white">+50 Puan</strong> kazan.</p>
+        </div>
+        <div class="flex items-start gap-3">
+          <span class="text-2xl">2️⃣</span>
+          <p><strong>Tehlikeler:</strong> Çamur göletleri karavanı yavaşlatır; dev kayalara çarpmak <strong>1 can ve -100 Puan</strong> kaybettirir.</p>
+        </div>
+        <div class="flex items-start gap-3">
+          <span class="text-2xl">3️⃣</span>
+          <p><strong>Park Aşaması:</strong> Yol sonunda kampa ulaştığında, iki retro karavan arasındaki <span class="text-yellow-300">parlayan sarı park çizgisine</span> gir ve tam ortasında dur. Açı ve merkez hassasiyetine göre <strong class="text-amber-300">+500'e kadar bonus</strong> ve 3 Yıldız kazan!</p>
+        </div>
+      </div>
+
+      <button id="closeHowToBtn" class="btn-glossy-orange w-full py-3 rounded-2xl font-title text-xl text-slate-950">
+        ANLADIM, BAŞLA!
+      </button>
+    </div>
+  </div>
+
+  <!-- LEADERBOARD MODAL -->
+  <div id="leaderboardModal" class="hidden absolute inset-0 z-50 flex items-center justify-center bg-slate-950/85 backdrop-blur-md p-4">
+    <div class="w-full max-w-md bg-gradient-to-b from-slate-900 to-teal-950 p-6 rounded-3xl border-4 border-yellow-400 shadow-2xl relative text-center">
+      <h3 class="font-title text-3xl text-yellow-300 text-stroke-sm mb-1">LİDERLİK TABLOSU</h3>
+      <p class="text-xs text-emerald-300 mb-4 font-bold">En Usta Karavan Sürücüleri</p>
+
+      <div id="menuLeaderboardList" class="bg-slate-950/80 rounded-2xl p-3 border border-emerald-600/40 space-y-2 text-xs md:text-sm font-bold mb-6 text-left max-h-60 overflow-y-auto">
+        <!-- Rendered dynamically -->
+      </div>
+
+      <button id="closeLeaderboardBtn" class="btn-glossy-orange w-full py-3 rounded-2xl font-title text-xl text-slate-950">
+        KAPAT
+      </button>
+    </div>
+  </div>
+
+  <!-- LEVEL FINISH & GAME OVER MODAL -->
+  <div id="endModal" class="hidden absolute inset-0 z-50 flex items-center justify-center bg-slate-950/90 backdrop-blur-md p-4">
+    <div class="w-full max-w-lg bg-gradient-to-b from-slate-900 via-emerald-950 to-slate-900 p-6 md:p-8 rounded-3xl border-4 border-amber-400 shadow-2xl text-center relative max-h-[92vh] overflow-y-auto">
+      
+      <!-- Dynamic Star Rating Display -->
+      <div id="starContainer" class="flex justify-center gap-3 text-5xl md:text-6xl mb-2 transition-all">
+        <span class="star opacity-25 text-amber-400">★</span>
+        <span class="star opacity-25 text-amber-400">★</span>
+        <span class="star opacity-25 text-amber-400">★</span>
+      </div>
+
+      <h2 id="endTitle" class="font-title text-3xl md:text-4xl text-yellow-300 text-stroke-sm mb-1">
+        GÖREV TAMAMLANDI!
+      </h2>
+      <p id="endSubtitle" class="text-xs md:text-sm text-emerald-200 font-bold mb-4">Harika park ettin, kamp ateşi seni bekliyor!</p>
+
+      <!-- Score Breakdown Card -->
+      <div class="bg-slate-950/90 rounded-2xl p-4 border border-amber-400/30 text-xs md:text-sm mb-5 space-y-2 font-bold text-left">
+        <div class="flex justify-between text-slate-300">
+          <span>⏱️ Kalan Süre Bonusu:</span>
+          <span id="scoreTime" class="font-title text-emerald-400 text-base">+0</span>
+        </div>
+        <div class="flex justify-between text-slate-300">
+          <span>🔥 Toplanan Malzemeler:</span>
+          <span id="scoreItems" class="font-title text-amber-400 text-base">+0</span>
+        </div>
+        <div class="flex justify-between text-slate-300">
+          <span>🎯 Park Hassasiyet Bonusu:</span>
+          <span id="scoreParking" class="font-title text-cyan-400 text-base">+0</span>
+        </div>
+        <div class="flex justify-between text-slate-300">
+          <span>💥 Hasar Cezası:</span>
+          <span id="scoreDamage" class="font-title text-rose-400 text-base">-0</span>
+        </div>
+        <div class="border-t border-slate-800 pt-2 flex justify-between items-center text-sm md:text-base">
+          <span class="text-amber-300 font-title text-lg">TOPLAM SKOR:</span>
+          <span id="scoreTotal" class="font-title text-3xl text-yellow-300">0</span>
+        </div>
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="flex gap-3">
+        <button id="btnReturnMenu" class="btn-glossy-wood flex-1 py-3.5 rounded-2xl font-title text-base md:text-lg text-slate-950 transition-all">
+          ANA MENÜ
+        </button>
+        <button id="btnPlayAgain" class="btn-glossy-green flex-1 py-3.5 rounded-2xl font-title text-lg md:text-xl text-white transition-all">
+          TEKRAR OYNA 🔄
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    /* Web Audio API Engine - 100% Procedural sound synthesis (zero external files) */
+    const SoundEngine = {
+      ctx: null,
+      enabled: true,
+      init() {
+        if (!this.ctx) {
+          const AudioContext = window.AudioContext || window.webkitAudioContext;
+          this.ctx = new AudioContext();
+        }
+        if (this.ctx.state === 'suspended') {
+          this.ctx.resume();
+        }
+      },
+      playClick() {
+        if (!this.enabled || !this.ctx) return;
+        const now = this.ctx.currentTime;
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(600, now);
+        osc.frequency.exponentialRampToValueAtTime(300, now + 0.08);
+        gain.gain.setValueAtTime(0.2, now);
+        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.08);
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.start(now);
+        osc.stop(now + 0.08);
+      },
+      playCollect() {
+        if (!this.enabled || !this.ctx) return;
+        const now = this.ctx.currentTime;
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(523.25, now); // C5
+        osc.frequency.exponentialRampToValueAtTime(880, now + 0.15); // A5
+        gain.gain.setValueAtTime(0.3, now);
+        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.22);
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.start(now);
+        osc.stop(now + 0.22);
+      },
+      playCrash() {
+        if (!this.enabled || !this.ctx) return;
+        const now = this.ctx.currentTime;
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(160, now);
+        osc.frequency.exponentialRampToValueAtTime(35, now + 0.28);
+        gain.gain.setValueAtTime(0.4, now);
+        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.28);
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.start(now);
+        osc.stop(now + 0.28);
+      },
+      playVictory() {
+        if (!this.enabled || !this.ctx) return;
+        const notes = [523.25, 659.25, 783.99, 1046.50]; // C, E, G, High C
+        notes.forEach((freq, idx) => {
+          const now = this.ctx.currentTime + idx * 0.14;
+          const osc = this.ctx.createOscillator();
+          const gain = this.ctx.createGain();
+          osc.type = 'triangle';
+          osc.frequency.setValueAtTime(freq, now);
+          gain.gain.setValueAtTime(0.3, now);
+          gain.gain.exponentialRampToValueAtTime(0.01, now + 0.4);
+          osc.connect(gain);
+          gain.connect(this.ctx.destination);
+          osc.start(now);
+          osc.stop(now + 0.4);
+        });
+      }
+    };
+
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+
+    // World & Road Geometry
+    const WORLD_WIDTH = 1200;
+    const WORLD_HEIGHT = 7600; // Road runs from Y: 7200 down to Y: 800
+    const ROAD_WIDTH = 270;
+
+    // Organic S-Curves leading to Campsite
+    const WAYPOINTS = [
+      { y: 7300, x: 600 },
+      { y: 6600, x: 480 },
+      { y: 5800, x: 740 },
+      { y: 5000, x: 460 },
+      { y: 4200, x: 700 },
+      { y: 3400, x: 500 },
+      { y: 2600, x: 720 },
+      { y: 1800, x: 580 },
+      { y: 1200, x: 600 },
+      { y: 600,  x: 600 } // Campsite entrance
+    ];
+
+    function getRoadCenterAt(y) {
+      if (y >= WAYPOINTS[0].y) return WAYPOINTS[0].x;
+      if (y <= WAYPOINTS[WAYPOINTS.length - 1].y) return WAYPOINTS[WAYPOINTS.length - 1].x;
+      for (let i = 0; i < WAYPOINTS.length - 1; i++) {
+        const p1 = WAYPOINTS[i];
+        const p2 = WAYPOINTS[i + 1];
+        if (y <= p1.y && y >= p2.y) {
+          const t = (p1.y - y) / (p1.y - p2.y);
+          return p1.x + t * (p2.x - p1.x);
+        }
+      }
+      return 600;
+    }
+
+    const GAME = {
+      active: false,
+      playerName: 'ScoobSürücü',
+      timeRemaining: 60,
+      timerInterval: null,
+      health: 3,
+      itemsCollected: 0,
+      totalItems: 6,
+      score: 0,
+      phase: 'journey', // 'journey' | 'parking'
+      parkEvaluated: false,
+      parkCheckTimer: 0,
+      skidMarks: [],
+      particles: [],
+      collectibles: [],
+      obstacles: [],
+      otherCaravans: [],
+      parkingSlot: {
+        x: 600,
+        y: 800,
+        width: 105,
+        height: 185,
+        angle: -Math.PI / 2 // Facing UP
+      }
+    };
+
+    // Player Caravan (70s Psychedelic Van)
+    const caravan = {
+      x: 600,
+      y: 7200,
+      width: 50,
+      height: 96,
+      angle: -Math.PI / 2, // Facing North/Up
+      speed: 0,
+      maxSpeed: 8.8,
+      reverseMaxSpeed: -3.2,
+      acceleration: 0.20,
+      reverseAcceleration: 0.14,
+      friction: 0.965,
+      turnSpeed: 0.046,
+      inMud: false,
+      invulnerableTimer: 0
+    };
+
+    // Controller input states
+    const keys = {
+      up: false,
+      down: false,
+      left: false,
+      right: false
+    };
+
+    function initEntities() {
+      GAME.collectibles = [];
+      GAME.obstacles = [];
+      GAME.otherCaravans = [];
+      GAME.skidMarks = [];
+      GAME.particles = [];
+
+      // 6 Collectible Camp Supplies
+      const itemTypes = ['marshmallow', 'wood', 'fuel'];
+      const itemYs = [6500, 5600, 4700, 3900, 3000, 2100];
+      itemYs.forEach((y, idx) => {
+        const cx = getRoadCenterAt(y);
+        const offset = (idx % 2 === 0 ? 1 : -1) * (40 + (idx * 15) % 55);
+        GAME.collectibles.push({
+          x: cx + offset,
+          y: y,
+          type: itemTypes[idx % itemTypes.length],
+          radius: 20,
+          collected: false,
+          bobble: Math.random() * Math.PI
+        });
+      });
+      GAME.totalItems = GAME.collectibles.length;
+
+      // Obstacles: Mud puddles (slows down) and Rocks (hurts and bounces)
+      const obsYs = [6200, 5300, 4400, 3500, 2700, 1800];
+      obsYs.forEach((y, idx) => {
+        const cx = getRoadCenterAt(y);
+        GAME.obstacles.push({
+          x: cx + (idx % 2 === 0 ? -48 : 48),
+          y: y,
+          type: 'mud',
+          radius: 48
+        });
+        GAME.obstacles.push({
+          x: cx + (idx % 2 === 0 ? 60 : -60),
+          y: y + 170,
+          type: 'rock',
+          radius: 24
+        });
+      });
+
+      // CAMPSITE: Parked Retro Caravans flanking the designated parking slot
+      GAME.otherCaravans = [
+        // Left Neighbor (Retro 70s Orange & Purple)
+        { x: 465, y: 800, angle: -Math.PI / 2, color: '#f97316', secondary: '#9333ea', width: 52, height: 98 },
+        // Right Neighbor (Pastel Sky Blue & Cream)
+        { x: 735, y: 800, angle: -Math.PI / 2, color: '#0284c7', secondary: '#fef08a', width: 52, height: 98 },
+        // Campsite Background Caravans & Tents
+        { x: 350, y: 720, angle: -Math.PI / 2, color: '#16a34a', secondary: '#facc15', width: 50, height: 92 },
+        { x: 850, y: 720, angle: -Math.PI / 2, color: '#dc2626', secondary: '#38bdf8', width: 50, height: 92 }
+      ];
+    }
+
+    function setupInput() {
+      window.addEventListener('keydown', (e) => {
+        if (!GAME.active) return;
+        if (e.code === 'KeyW' || e.key === 'ArrowUp') keys.up = true;
+        if (e.code === 'KeyS' || e.key === 'ArrowDown') keys.down = true;
+        if (e.code === 'KeyA' || e.key === 'ArrowLeft') keys.left = true;
+        if (e.code === 'KeyD' || e.key === 'ArrowRight') keys.right = true;
+      });
+
+      window.addEventListener('keyup', (e) => {
+        if (e.code === 'KeyW' || e.key === 'ArrowUp') keys.up = false;
+        if (e.code === 'KeyS' || e.key === 'ArrowDown') keys.down = false;
+        if (e.code === 'KeyA' || e.key === 'ArrowLeft') keys.left = false;
+        if (e.code === 'KeyD' || e.key === 'ArrowRight') keys.right = false;
+      });
